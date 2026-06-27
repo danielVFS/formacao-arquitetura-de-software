@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { validateCpf } from "../../src/validateCpf.ts";
+import { validateCpf } from "../src/validateCpf.ts";
 
 test.each(["97456321558", "71428793860", "87748248800"])(
   "Deve verificar um cpf válido: %s",
