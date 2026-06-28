@@ -3,6 +3,7 @@ import crypto from "crypto";
 import express, { type Request, type Response } from "express";
 import pgp from "pg-promise";
 import { validateCpf } from "./validateCpf.ts";
+import { validateName } from "./validateName.ts";
 
 const app = express();
 app.use(express.json());
@@ -15,7 +16,7 @@ app.post("/signup", async (req: Request, res: Response) => {
 
   const input = req.body;
 
-  if (!input.name.match(/[a-zA-Z ]+ [a-zA-Z ]+/)) {
+  if (!validateName(input.name)) {
     return res.json({ error: "Invalid name" });
   }
 
