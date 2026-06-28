@@ -2,6 +2,7 @@ import cors from "cors";
 import crypto from "crypto";
 import express, { type Request, type Response } from "express";
 import pgp from "pg-promise";
+import { validateCpf } from "./validateCpf.ts";
 
 const app = express();
 app.use(express.json());
@@ -13,6 +14,27 @@ app.post("/signup", async (req: Request, res: Response) => {
   const accountId = crypto.randomUUID();
 
   const input = req.body;
+
+  if (!input.name.match(/[a-zA-Z ]+ [a-zA-Z ]+/)) {
+    return res.json({ error: "Invalid name" });
+  }
+
+  if (!input.email.match(/.+@.+\..+/)) {
+    return res.json({ error: "Invalid email" });
+  }
+
+  if (!validateCpf(input.document)) {
+    return res.json({ error: "Invalid document" });
+  }
+
+  if (
+    input.password.length < 8 ||
+    !input.password.match(/[a-z]/) ||
+    !input.password.match(/[A-Z]/) ||
+    !input.password.match(/[0-9]/)
+  ) {
+    return res.json({ error: "Invalid password" });
+  }
 
   await connection.query(
     "INSERT INTO app.account (account_id, name, email, document, password) VALUES ($1, $2, $3, $4, $5)",
