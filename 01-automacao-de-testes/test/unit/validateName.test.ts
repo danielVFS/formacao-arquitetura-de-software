@@ -9,6 +9,15 @@ test("Deve validar o nome", () => {
   expect(isValid).toBe(true);
 });
 
+test.each(["João Silva", "José da Conceição", "Ângela Maria"])(
+  "Deve validar o nome com acentuação da língua portuguesa %s",
+  (name) => {
+    const isValid = validateName(name);
+
+    expect(isValid).toBe(true);
+  },
+);
+
 test.each(["John", undefined, null, ""])(
   "Não deve validar o nome %s",
   (name: any) => {
