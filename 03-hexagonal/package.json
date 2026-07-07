@@ -6,7 +6,7 @@
   "scripts": {
     "compose:up": "docker compose -f docker/docker-compose.yaml up -d",
     "compose:down": "docker compose -f docker/docker-compose.yaml down -v",
-    "dev": "tsx watch src/api.ts",
+    "dev": "tsx watch src/index.ts",
     "test": "vitest",
     "test:coverage": "vitest --coverage"
   },

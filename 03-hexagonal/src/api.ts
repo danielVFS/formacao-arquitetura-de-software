@@ -1,10 +1,8 @@
 import cors from "cors";
 import express, { type Request, type Response } from "express";
-import { AccountDataDataBase } from "./AccountData.ts";
 import type AccountService from "./AccountService.ts";
-import { AccountServiceImpl } from "./AccountService.ts";
 
-class API {
+export default class API {
   constructor(readonly accountService: AccountService) {
     const app = express();
     app.use(express.json());
@@ -30,7 +28,3 @@ class API {
     app.listen(3000);
   }
 }
-
-const accountData = new AccountDataDataBase();
-const accountService = new AccountServiceImpl(accountData);
-const api = new API(accountService);

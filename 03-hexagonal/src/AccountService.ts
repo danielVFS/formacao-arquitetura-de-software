@@ -2,11 +2,13 @@ import crypto from "crypto";
 import { validateCpf } from "./validateCpf.ts";
 import { validateName } from "./validateName.ts";
 
+// Driver Port
 export default interface AccountService {
   signUpService: (input: SignInputInput) => Promise<SignUpOutput>;
   getAccountService: (accountId: string) => Promise<GetAccountOutput>;
 }
 
+// Driven Port
 export interface AccountServiceAccountData {
   save(account: Account): Promise<void>;
   getById(accountId: string): Promise<Account>;
