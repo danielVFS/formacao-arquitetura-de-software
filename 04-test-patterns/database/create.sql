@@ -9,3 +9,10 @@ create table app.account (
     document text,
     password text
 );
+
+create table app.balance (
+    account_id uuid,
+    asset_id text,
+    quantity numeric,
+    primary key (account_id, asset_id)
+);
