@@ -60,7 +60,7 @@ export class AccountServiceImpl implements AccountService {
 
   async getAccount(accountId: string): Promise<GetAccountOutput> {
     const account = await this.accountData.getById(accountId);
-    const balanceData = new BalanceData();
+    const balanceData = new BalanceData(); // -> feito intencionalmente para testar o stub.
     const balances = await balanceData.listByAccountId(accountId);
     const output = {
       accountId: account.accountId,
@@ -79,7 +79,7 @@ export class AccountServiceImpl implements AccountService {
   async deposit(input: DepositInput): Promise<void> {
     const account = await this.accountData.getById(input.accountId);
     if (account) {
-      const balanceData = new BalanceData();
+      const balanceData = new BalanceData(); // -> feito intencionalmente para testar o stub.
       const balances = await balanceData.listByAccountId(input.accountId);
       const existingBalance = balances.find(
         (balance) => balance.assetId === input.assetId,
