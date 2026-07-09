@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
-import { AccountDataDataBase } from "../../src/AccountData.ts";
+import { AccountDAODatabase } from "../../src/AccountDAO.ts";
 
 test("Deve persistir um conta", async () => {
-  const accountData = new AccountDataDataBase();
+  const accountData = new AccountDAODatabase();
   const account = {
     accountId: crypto.randomUUID(),
     name: "John Doe",

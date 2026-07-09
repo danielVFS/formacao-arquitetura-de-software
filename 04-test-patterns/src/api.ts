@@ -12,7 +12,7 @@ export default class API {
       const input = req.body;
 
       try {
-        const output = await accountService.signUpService(input);
+        const output = await accountService.signup(input);
         res.json({ accountId: output.accountId });
       } catch (error: any) {
         res.json({ error: error.message });
@@ -21,7 +21,7 @@ export default class API {
 
     app.get("/accounts/:accountId", async (req: Request, res: Response) => {
       const accountId = req.params.accountId as string;
-      const output = await accountService.getAccountService(accountId);
+      const output = await accountService.getAccount(accountId);
       res.json(output);
     });
 

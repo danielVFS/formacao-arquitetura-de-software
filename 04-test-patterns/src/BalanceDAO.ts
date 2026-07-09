@@ -1,6 +1,10 @@
 import pgp from "pg-promise";
 
-export default class BalanceData {
+export default interface BalanceDAO {
+  upsert(balance: Balance): Promise<void>;
+  listByAccountId(accountId: string): Promise<Balance[]>;
+}
+export class BalanceDAODatabase implements BalanceDAO {
   async upsert(balance: Balance): Promise<void> {
     const connection = pgp()("postgres://postgres:123456@localhost:5432/app");
     await connection.query(
@@ -23,6 +27,25 @@ export default class BalanceData {
     }));
     await connection.$pool.end();
     return balancesData;
+  }
+}
+
+export class BalanceDAOFake implements BalanceDAO {
+  private balances: Balance[] = [];
+
+  async upsert(balance: Balance): Promise<void> {
+    const existingBalance = this.balances.find(
+      (b) => b.accountId === balance.accountId && b.assetId === balance.assetId,
+    );
+    if (existingBalance) {
+      existingBalance.quantity = balance.quantity;
+    } else {
+      this.balances.push(balance);
+    }
+  }
+
+  async listByAccountId(accountId: string): Promise<Balance[]> {
+    return this.balances.filter((balance) => balance.accountId === accountId);
   }
 }
 

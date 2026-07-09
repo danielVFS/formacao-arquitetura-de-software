@@ -1,16 +1,18 @@
-import pgp from "pg-promise";
-import type { AccountServiceAccountData } from "./AccountService.ts";
+// Driven Adapter
 
-export default interface AccountData extends AccountServiceAccountData {
+import pgp from "pg-promise";
+
+export default interface AccountDAO {
   save(account: Account): Promise<void>;
   getById(accountId: string): Promise<Account>;
   list(): Promise<Account[]>;
 }
-export class AccountDataDataBase implements AccountData {
+
+export class AccountDAODatabase implements AccountDAO {
   async save(account: Account): Promise<void> {
     const connection = pgp()("postgres://postgres:123456@localhost:5432/app");
     await connection.query(
-      "INSERT INTO app.account (account_id, name, email, document, password) VALUES ($1, $2, $3, $4, $5)",
+      "insert into app.account (account_id, name, email, document, password) values ($1, $2, $3, $4, $5)",
       [
         account.accountId,
         account.name,
@@ -25,7 +27,7 @@ export class AccountDataDataBase implements AccountData {
   async getById(accountId: string): Promise<Account> {
     const connection = pgp()("postgres://postgres:123456@localhost:5432/app");
     const [accountData] = await connection.query(
-      "SELECT * FROM app.account WHERE account_id = $1",
+      "select * from app.account where account_id = $1",
       [accountId],
     );
     const account = {
@@ -41,21 +43,29 @@ export class AccountDataDataBase implements AccountData {
 
   async list(): Promise<Account[]> {
     const connection = pgp()("postgres://postgres:123456@localhost:5432/app");
-    const accountData = await connection.query("SELECT * FROM app.account");
-    const accounts = accountData.map((data: any) => ({
-      accountId: data.account_id,
-      name: data.name,
-      email: data.email,
-      document: data.document,
-      password: data.password,
-    }));
+    const accountsData = await connection.query(
+      "select * from app.account",
+      [],
+    );
+    const accounts: Account[] = [];
+    for (const accountData of accountsData) {
+      const account = {
+        accountId: accountData.account_id,
+        name: accountData.name,
+        email: accountData.email,
+        document: accountData.document,
+        password: accountData.password,
+      };
+      accounts.push(account);
+    }
+
     await connection.$pool.end();
     return accounts;
   }
 }
 
-export class AccountDataFake implements AccountData {
-  private accounts: Account[] = [];
+export class AccountDAOFake implements AccountDAO {
+  accounts: Account[] = [];
 
   async save(account: Account): Promise<void> {
     this.accounts.push(account);
@@ -63,11 +73,9 @@ export class AccountDataFake implements AccountData {
 
   async getById(accountId: string): Promise<Account> {
     const account = this.accounts.find(
-      (account) => account.accountId === accountId,
+      (account: Account) => account.accountId === accountId,
     );
-    if (!account) {
-      throw new Error("Account not found");
-    }
+    if (!account) throw new Error("Account not found");
     return account;
   }
 
