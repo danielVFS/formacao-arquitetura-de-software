@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import BalanceData from "./BalanceData.ts";
+import { PaymentGatewayHttp } from "./PaymentGateway.ts";
 import { validateCpf } from "./validateCpf.ts";
 import { validateName } from "./validateName.ts";
 
@@ -79,18 +80,31 @@ export class AccountServiceImpl implements AccountService {
   async deposit(input: DepositInput): Promise<void> {
     const account = await this.accountData.getById(input.accountId);
     if (account) {
-      const balanceData = new BalanceData(); // -> feito intencionalmente para testar o stub.
-      const balances = await balanceData.listByAccountId(input.accountId);
-      const existingBalance = balances.find(
-        (balance) => balance.assetId === input.assetId,
-      );
-      const existingQuantity = existingBalance ? existingBalance.quantity : 0;
-      const balance = {
-        accountId: input.accountId,
-        assetId: input.assetId,
-        quantity: existingQuantity + input.quantity,
+      const paymentGateway = new PaymentGatewayHttp(); // -> feito intencionalmente para testar o stub.
+      const inputProcessTransaction = {
+        creditCardHolder: input.creditCardHolderName,
+        creditCardNumber: input.creditCardNumber,
+        creditCardExpDate: input.creditCardExpDate,
+        creditCardCvv: input.creditCardCvv,
+        amount: input.quantity,
       };
-      await balanceData.upsert(balance);
+      const outputProcessTransaction = await paymentGateway.processTransaction(
+        inputProcessTransaction,
+      );
+      if (outputProcessTransaction.autorizada === "1") {
+        const balanceData = new BalanceData(); // -> feito intencionalmente para testar o stub.
+        const balances = await balanceData.listByAccountId(input.accountId);
+        const existingBalance = balances.find(
+          (balance) => balance.assetId === input.assetId,
+        );
+        const existingQuantity = existingBalance ? existingBalance.quantity : 0;
+        const balance = {
+          accountId: input.accountId,
+          assetId: input.assetId,
+          quantity: existingQuantity + input.quantity,
+        };
+        await balanceData.upsert(balance);
+      }
     }
   }
 }
