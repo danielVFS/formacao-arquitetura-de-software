@@ -25,7 +25,13 @@ type Account = {
   password: string;
 };
 export class AccountServiceImpl implements AccountService {
-  constructor(readonly accountData: AccountServiceAccountData) {}
+  balanceData: BalanceData;
+  paymentGateway: PaymentGatewayHttp;
+
+  constructor(readonly accountData: AccountServiceAccountData) {
+    this.paymentGateway = new PaymentGatewayHttp(); // -> feito intencionalmente para testar o stub.
+    this.balanceData = new BalanceData(); // -> feito intencionalmente para testar o stub.
+  }
 
   async signUp(input: SignInputInput): Promise<SignUpOutput> {
     if (!validateName(input.name)) {
@@ -61,8 +67,7 @@ export class AccountServiceImpl implements AccountService {
 
   async getAccount(accountId: string): Promise<GetAccountOutput> {
     const account = await this.accountData.getById(accountId);
-    const balanceData = new BalanceData(); // -> feito intencionalmente para testar o stub.
-    const balances = await balanceData.listByAccountId(accountId);
+    const balances = await this.balanceData.listByAccountId(accountId);
     const output = {
       accountId: account.accountId,
       name: account.name,
@@ -80,7 +85,6 @@ export class AccountServiceImpl implements AccountService {
   async deposit(input: DepositInput): Promise<void> {
     const account = await this.accountData.getById(input.accountId);
     if (account) {
-      const paymentGateway = new PaymentGatewayHttp(); // -> feito intencionalmente para testar o stub.
       const inputProcessTransaction = {
         creditCardHolder: input.creditCardHolderName,
         creditCardNumber: input.creditCardNumber,
@@ -88,12 +92,12 @@ export class AccountServiceImpl implements AccountService {
         creditCardCvv: input.creditCardCvv,
         amount: input.quantity,
       };
-      const outputProcessTransaction = await paymentGateway.processTransaction(
-        inputProcessTransaction,
-      );
+      const outputProcessTransaction =
+        await this.paymentGateway.processTransaction(inputProcessTransaction);
       if (outputProcessTransaction.autorizada === "1") {
-        const balanceData = new BalanceData(); // -> feito intencionalmente para testar o stub.
-        const balances = await balanceData.listByAccountId(input.accountId);
+        const balances = await this.balanceData.listByAccountId(
+          input.accountId,
+        );
         const existingBalance = balances.find(
           (balance) => balance.assetId === input.assetId,
         );
@@ -103,7 +107,7 @@ export class AccountServiceImpl implements AccountService {
           assetId: input.assetId,
           quantity: existingQuantity + input.quantity,
         };
-        await balanceData.upsert(balance);
+        await this.balanceData.upsert(balance);
       }
     }
   }

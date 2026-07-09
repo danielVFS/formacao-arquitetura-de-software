@@ -174,3 +174,64 @@ test("Deve fazer um depósito em uma conta spy", async () => {
 
   processTransactionSpy.restore();
 });
+
+test.only("Deve fazer um depósito em uma conta mock", async () => {
+  const accountData = new AccountDataDataBase();
+  const accountService = new AccountServiceImpl(accountData);
+
+  const balanceDataMock = sinon.mock(BalanceData.prototype);
+  const paymentGatewayMock = sinon.mock(PaymentGatewayHttp.prototype);
+
+  const inputSignup = {
+    name: "John Doe",
+    email: "john.doe@gmail.com",
+    document: "97456321558",
+    password: "asdQWE123",
+  };
+  const outputSignup = await accountService.signUp(inputSignup);
+  const inputDeposit = {
+    accountId: outputSignup.accountId,
+    assetId: "USD",
+    quantity: 100,
+    creditCardHolderName: "John Doe",
+    creditCardNumber: "4012001037141112",
+    creditCardExpDate: "05/2027",
+    creditCardCvv: "123",
+  };
+
+  balanceDataMock.expects("upsert").once().resolves();
+  balanceDataMock
+    .expects("listByAccountId")
+    .twice()
+    .resolves([
+      {
+        accountId: "",
+        assetId: "USD",
+        quantity: 100,
+      },
+    ]);
+  paymentGatewayMock
+    .expects("processTransaction")
+    .once()
+    .withArgs({
+      creditCardHolder: inputDeposit.creditCardHolderName,
+      creditCardNumber: inputDeposit.creditCardNumber,
+      creditCardExpDate: inputDeposit.creditCardExpDate,
+      creditCardCvv: inputDeposit.creditCardCvv,
+      amount: inputDeposit.quantity,
+    })
+    .resolves({ autorizada: "1" });
+
+  await accountService.deposit(inputDeposit);
+  const outputGetAccount = await accountService.getAccount(
+    outputSignup.accountId,
+  );
+
+  expect(outputGetAccount.balances[0]?.assetId).toEqual("USD");
+  expect(outputGetAccount.balances[0]?.quantity).toEqual(100);
+
+  balanceDataMock.verify();
+  balanceDataMock.restore();
+  paymentGatewayMock.verify();
+  paymentGatewayMock.restore();
+});
