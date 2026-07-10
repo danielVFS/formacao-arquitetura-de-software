@@ -1,9 +1,7 @@
-import crypto from "crypto";
+import Account from "./Account.ts";
 import type AccountDAO from "./AccountDAO.ts";
 import type BalanceDAO from "./BalanceDAO.ts";
 import type PaymentGateway from "./PaymentGateway.ts";
-import { validateCpf } from "./validateCpf.ts";
-import { validateName } from "./validateName.ts";
 
 export default interface AccountService {
   signup(input: SignupInput): Promise<SignupOutput>;
@@ -19,30 +17,12 @@ export class AccountServiceImpl {
   ) {}
 
   async signup(input: SignupInput): Promise<SignupOutput> {
-    if (!validateName(input.name)) {
-      throw new Error("Invalid name");
-    }
-    if (!input.email.match(/.+@.+\..+/)) {
-      throw new Error("Invalid email");
-    }
-    if (!validateCpf(input.document)) {
-      throw new Error("Invalid document");
-    }
-    if (
-      input.password.length < 8 ||
-      !input.password.match(/[a-z]/) ||
-      !input.password.match(/[A-Z]/) ||
-      !input.password.match(/[0-9]/)
-    ) {
-      throw new Error("Invalid password");
-    }
-    const account = {
-      accountId: crypto.randomUUID(),
-      name: input.name,
-      email: input.email,
-      document: input.document,
-      password: input.password,
-    };
+    const account = Account.create(
+      input.name,
+      input.email,
+      input.document,
+      input.password,
+    );
     await this.accountDAO.save(account);
     return {
       accountId: account.accountId,

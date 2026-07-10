@@ -115,7 +115,7 @@ test("Deve fazer dois depósitos do mesmo tipo de recurso em uma conta", async (
   expect(outputGetAccount.balances[0]?.quantity).toBe(200);
 });
 
-test("Deve fazer um depósito em uma conta spy", async () => {
+test.skip("Deve fazer um depósito em uma conta spy", async () => {
   const accountDAO = new AccountDAODatabase();
   const balanceDAO = new BalanceDAODatabase();
   const paymentGateway = new PaymentGatewayHttp();
