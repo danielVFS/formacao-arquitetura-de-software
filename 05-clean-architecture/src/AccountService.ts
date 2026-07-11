@@ -1,6 +1,5 @@
 import Account from "./Account.ts";
 import type AccountRepository from "./AccountRepository.ts";
-import type BalanceDAO from "./BalanceDAO.ts";
 import type PaymentGateway from "./PaymentGateway.ts";
 
 export default interface AccountService {
@@ -12,7 +11,6 @@ export default interface AccountService {
 export class AccountServiceImpl {
   constructor(
     readonly accountRepository: AccountRepository,
-    readonly balanceDAO: BalanceDAO,
     readonly paymentGateway: PaymentGateway,
   ) {}
 

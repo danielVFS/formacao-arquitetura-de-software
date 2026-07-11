@@ -6,7 +6,6 @@ import {
   AccountRepositoryFake,
 } from "../../src/AccountRepository.ts";
 import { AccountServiceImpl } from "../../src/AccountService.ts";
-import { BalanceDAODatabase, BalanceDAOFake } from "../../src/BalanceDAO.ts";
 import {
   PaymentGatewayFake,
   PaymentGatewayHttp,
@@ -14,11 +13,9 @@ import {
 
 test("Deve criar uma conta", async () => {
   const accountRepository = new AccountRepositoryDatabase();
-  const balanceDAO = new BalanceDAOFake();
   const paymentGateway = new PaymentGatewayFake();
   const accountService = new AccountServiceImpl(
     accountRepository,
-    balanceDAO,
     paymentGateway,
   );
   const input = {
@@ -40,11 +37,9 @@ test("Deve criar uma conta", async () => {
 
 test("Deve fazer dois depósitos do mesmo tipo de recurso em uma conta", async () => {
   const accountRepository = new AccountRepositoryDatabase();
-  const balanceDAO = new BalanceDAODatabase();
   const paymentGateway = new PaymentGatewayFake();
   const accountService = new AccountServiceImpl(
     accountRepository,
-    balanceDAO,
     paymentGateway,
   );
   const inputSignup = {
@@ -74,11 +69,9 @@ test("Deve fazer dois depósitos do mesmo tipo de recurso em uma conta", async (
 
 test.skip("Deve fazer um depósito em uma conta spy", async () => {
   const accountRepository = new AccountRepositoryDatabase();
-  const balanceDAO = new BalanceDAODatabase();
   const paymentGateway = new PaymentGatewayHttp();
   const accountService = new AccountServiceImpl(
     accountRepository,
-    balanceDAO,
     paymentGateway,
   );
   const processTransactionSpy = sinon.spy(
@@ -122,11 +115,9 @@ test.skip("Deve fazer um depósito em uma conta spy", async () => {
 
 test("Deve fazer um depósito em uma conta mock", async () => {
   const accountRepository = new AccountRepositoryDatabase();
-  const balanceDAO = new BalanceDAODatabase();
   const paymentGateway = new PaymentGatewayHttp();
   const accountService = new AccountServiceImpl(
     accountRepository,
-    balanceDAO,
     paymentGateway,
   );
   const accountRepositoryMock = sinon.mock(AccountRepositoryDatabase.prototype);
@@ -185,11 +176,9 @@ test("Deve fazer um depósito em uma conta mock", async () => {
 
 test("Deve fazer um depósito em uma conta com fake", async () => {
   const accountRepository = new AccountRepositoryFake();
-  const balanceDAO = new BalanceDAOFake();
   const paymentGateway = new PaymentGatewayFake();
   const accountService = new AccountServiceImpl(
     accountRepository,
-    balanceDAO,
     paymentGateway,
   );
   const inputSignup = {
