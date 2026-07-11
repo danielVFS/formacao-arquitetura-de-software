@@ -1,5 +1,5 @@
 import Account from "./Account.ts";
-import type AccountDAO from "./AccountDAO.ts";
+import type AccountRepository from "./AccountRepository.ts";
 import type BalanceDAO from "./BalanceDAO.ts";
 import type PaymentGateway from "./PaymentGateway.ts";
 
@@ -11,7 +11,7 @@ export default interface AccountService {
 
 export class AccountServiceImpl {
   constructor(
-    readonly accountDAO: AccountDAO,
+    readonly accountRepository: AccountRepository,
     readonly balanceDAO: BalanceDAO,
     readonly paymentGateway: PaymentGateway,
   ) {}
@@ -23,22 +23,21 @@ export class AccountServiceImpl {
       input.document,
       input.password,
     );
-    await this.accountDAO.save(account);
+    await this.accountRepository.save(account);
     return {
       accountId: account.accountId,
     };
   }
 
   async getAccount(accountId: string): Promise<GetAccountOutput> {
-    const account = await this.accountDAO.getById(accountId);
-    const balances = await this.balanceDAO.listByAccountId(accountId);
+    const account = await this.accountRepository.getById(accountId);
     const output = {
       accountId: account.accountId,
-      name: account.name,
+      name: account.getName(),
       email: account.email,
       document: account.document,
       password: account.password,
-      balances: balances.map((balance) => ({
+      balances: account.balances.map((balance) => ({
         assetId: balance.assetId,
         quantity: balance.quantity,
       })),
@@ -47,7 +46,7 @@ export class AccountServiceImpl {
   }
 
   async deposit(input: DepositInput): Promise<void> {
-    const account = await this.accountDAO.getById(input.accountId);
+    const account = await this.accountRepository.getById(input.accountId);
     if (account) {
       const inputProcessTransaction = {
         creditCardHolder: input.creditCardHolder,
@@ -56,33 +55,25 @@ export class AccountServiceImpl {
         creditCardCvv: input.creditCardCvv,
         amount: input.quantity,
       };
-      const outputProcessTransaction =
-        await this.paymentGateway.processTransaction(inputProcessTransaction);
-      if (outputProcessTransaction.autorizada === "1") {
-        const balances = await this.balanceDAO.listByAccountId(input.accountId);
-        const existingBalance = balances.find(
-          (balance) => balance.assetId === input.assetId,
-        );
-        const existingQuantity = existingBalance ? existingBalance.quantity : 0;
-        const balance = {
-          accountId: input.accountId,
-          assetId: input.assetId,
-          quantity: existingQuantity + input.quantity,
-        };
-        await this.balanceDAO.upsert(balance);
+      const outputProcessTransac = await this.paymentGateway.processTransaction(
+        inputProcessTransaction,
+      );
+      if (outputProcessTransac.autorizada === "1") {
+        account.deposit(input.assetId, input.quantity);
+        await this.accountRepository.update(account);
       }
     }
   }
 }
 
 export class AccountServiceFake implements AccountService {
-  async signup(input: SignupInput): Promise<SignupOutput> {
+  async signup(_: SignupInput): Promise<SignupOutput> {
     return {
       accountId: "1",
     };
   }
 
-  async getAccount(accountId: string): Promise<GetAccountOutput> {
+  async getAccount(_: string): Promise<GetAccountOutput> {
     return {
       accountId: "1",
       name: "a",
@@ -93,7 +84,7 @@ export class AccountServiceFake implements AccountService {
     };
   }
 
-  async deposit(input: DepositInput): Promise<void> {}
+  async deposit(_: DepositInput): Promise<void> {}
 }
 
 type SignupInput = {

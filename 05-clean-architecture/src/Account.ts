@@ -6,7 +6,7 @@ import { validatePassword } from "./validatePassword.ts";
 export default class Account {
   constructor(
     readonly accountId: string,
-    readonly name: string,
+    private name: string,
     readonly email: string,
     readonly document: string,
     readonly password: string,
@@ -30,9 +30,36 @@ export default class Account {
     const balances: Balance[] = [];
     return new Account(accountId, name, email, document, password, balances);
   }
+
+  deposit(assetId: string, quantity: number) {
+    const balance = this.balances.find(
+      (balance) => balance.assetId === assetId,
+    );
+    if (balance) {
+      balance.quantity += quantity;
+    } else {
+      this.balances.push({ assetId, quantity });
+    }
+  }
+
+  getBalance(assetId: string) {
+    const balance = this.balances.find(
+      (balance) => balance.assetId === assetId,
+    );
+    return balance ? balance.quantity : 0;
+  }
+
+  setName(name: string) {
+    if (!validateName(name)) throw new Error("Invalid name");
+    this.name = name;
+  }
+
+  getName() {
+    return this.name;
+  }
 }
 
 export type Balance = {
-  accountId: string;
+  assetId: string;
   quantity: number;
 };

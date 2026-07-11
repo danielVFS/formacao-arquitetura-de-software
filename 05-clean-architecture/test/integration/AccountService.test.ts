@@ -1,6 +1,10 @@
 import sinon from "sinon";
 import { expect, test } from "vitest";
-import { AccountDAODatabase, AccountDAOFake } from "../../src/AccountDAO.ts";
+import Account from "../../src/Account.ts";
+import {
+  AccountRepositoryDatabase,
+  AccountRepositoryFake,
+} from "../../src/AccountRepository.ts";
 import { AccountServiceImpl } from "../../src/AccountService.ts";
 import { BalanceDAODatabase, BalanceDAOFake } from "../../src/BalanceDAO.ts";
 import {
@@ -9,11 +13,11 @@ import {
 } from "../../src/PaymentGateway.ts";
 
 test("Deve criar uma conta", async () => {
-  const accountDAO = new AccountDAODatabase();
+  const accountRepository = new AccountRepositoryDatabase();
   const balanceDAO = new BalanceDAOFake();
   const paymentGateway = new PaymentGatewayFake();
   const accountService = new AccountServiceImpl(
-    accountDAO,
+    accountRepository,
     balanceDAO,
     paymentGateway,
   );
@@ -34,59 +38,12 @@ test("Deve criar uma conta", async () => {
   expect(outputGetAccount.password).toBe(input.password);
 });
 
-test("Deve fazer um depósito em uma conta com stub", async () => {
-  const accountDAO = new AccountDAODatabase();
-  const balanceDAO = new BalanceDAODatabase();
-  const paymentGateway = new PaymentGatewayFake();
-  const accountService = new AccountServiceImpl(
-    accountDAO,
-    balanceDAO,
-    paymentGateway,
-  );
-  const upsertStub = sinon
-    .stub(BalanceDAODatabase.prototype, "upsert")
-    .resolves();
-  const listByAccountIdStub = sinon
-    .stub(BalanceDAODatabase.prototype, "listByAccountId")
-    .resolves([
-      {
-        accountId: "",
-        assetId: "USD",
-        quantity: 100,
-      },
-    ]);
-  const inputSignup = {
-    name: "John Doe",
-    email: "john.doe@gmail.com",
-    document: "97456321558",
-    password: "asdQWE123",
-  };
-  const outputSignup = await accountService.signup(inputSignup);
-  const inputDeposit = {
-    accountId: outputSignup.accountId,
-    assetId: "USD",
-    quantity: 100,
-    creditCardHolder: "JOHN DOE",
-    creditCardNumber: "4012001037141112",
-    creditCardExpDate: "05/2027",
-    creditCardCvv: "123",
-  };
-  await accountService.deposit(inputDeposit);
-  const outputGetAccount = await accountService.getAccount(
-    outputSignup.accountId,
-  );
-  expect(outputGetAccount.balances[0]?.assetId).toBe("USD");
-  expect(outputGetAccount.balances[0]?.quantity).toBe(100);
-  upsertStub.restore();
-  listByAccountIdStub.restore();
-});
-
 test("Deve fazer dois depósitos do mesmo tipo de recurso em uma conta", async () => {
-  const accountDAO = new AccountDAODatabase();
+  const accountRepository = new AccountRepositoryDatabase();
   const balanceDAO = new BalanceDAODatabase();
   const paymentGateway = new PaymentGatewayFake();
   const accountService = new AccountServiceImpl(
-    accountDAO,
+    accountRepository,
     balanceDAO,
     paymentGateway,
   );
@@ -116,11 +73,11 @@ test("Deve fazer dois depósitos do mesmo tipo de recurso em uma conta", async (
 });
 
 test.skip("Deve fazer um depósito em uma conta spy", async () => {
-  const accountDAO = new AccountDAODatabase();
+  const accountRepository = new AccountRepositoryDatabase();
   const balanceDAO = new BalanceDAODatabase();
   const paymentGateway = new PaymentGatewayHttp();
   const accountService = new AccountServiceImpl(
-    accountDAO,
+    accountRepository,
     balanceDAO,
     paymentGateway,
   );
@@ -164,15 +121,15 @@ test.skip("Deve fazer um depósito em uma conta spy", async () => {
 });
 
 test("Deve fazer um depósito em uma conta mock", async () => {
-  const accountDAO = new AccountDAODatabase();
+  const accountRepository = new AccountRepositoryDatabase();
   const balanceDAO = new BalanceDAODatabase();
   const paymentGateway = new PaymentGatewayHttp();
   const accountService = new AccountServiceImpl(
-    accountDAO,
+    accountRepository,
     balanceDAO,
     paymentGateway,
   );
-  const balanceDataMock = sinon.mock(BalanceDAODatabase.prototype);
+  const accountRepositoryMock = sinon.mock(AccountRepositoryDatabase.prototype);
   const paymentGatewayMock = sinon.mock(PaymentGatewayHttp.prototype);
   const inputSignup = {
     name: "John Doe",
@@ -180,6 +137,7 @@ test("Deve fazer um depósito em uma conta mock", async () => {
     document: "97456321558",
     password: "asdQWE123",
   };
+  accountRepositoryMock.expects("save").once().resolves();
   const outputSignup = await accountService.signup(inputSignup);
   const inputDeposit = {
     accountId: outputSignup.accountId,
@@ -190,17 +148,16 @@ test("Deve fazer um depósito em uma conta mock", async () => {
     creditCardExpDate: "05/2027",
     creditCardCvv: "123",
   };
-  balanceDataMock.expects("upsert").once().resolves();
-  balanceDataMock
-    .expects("listByAccountId")
-    .twice()
-    .resolves([
-      {
-        accountId: "",
-        assetId: "USD",
-        quantity: 100,
-      },
-    ]);
+  const mockedAccount = new Account(
+    outputSignup.accountId,
+    inputSignup.name,
+    inputSignup.email,
+    inputSignup.document,
+    inputSignup.password,
+    [],
+  );
+  accountRepositoryMock.expects("update").once().resolves();
+  accountRepositoryMock.expects("getById").twice().resolves(mockedAccount);
   paymentGatewayMock
     .expects("processTransaction")
     .once()
@@ -220,18 +177,18 @@ test("Deve fazer um depósito em uma conta mock", async () => {
   );
   expect(outputGetAccount.balances[0]?.assetId).toBe("USD");
   expect(outputGetAccount.balances[0]?.quantity).toBe(100);
-  balanceDataMock.verify();
-  balanceDataMock.restore();
+  accountRepositoryMock.verify();
+  accountRepositoryMock.restore();
   paymentGatewayMock.verify();
   paymentGatewayMock.restore();
 });
 
 test("Deve fazer um depósito em uma conta com fake", async () => {
-  const accountDAO = new AccountDAOFake();
+  const accountRepository = new AccountRepositoryFake();
   const balanceDAO = new BalanceDAOFake();
   const paymentGateway = new PaymentGatewayFake();
   const accountService = new AccountServiceImpl(
-    accountDAO,
+    accountRepository,
     balanceDAO,
     paymentGateway,
   );

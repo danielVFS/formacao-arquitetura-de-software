@@ -11,7 +11,7 @@ test("Deve criar uma conta", () => {
 
   expect(account).toBeDefined();
   expect(account.accountId).toBeDefined();
-  expect(account.name).toBe("John Doe");
+  expect(account.getName()).toBe("John Doe");
   expect(account.email).toBe("john.doe@gmail.com");
   expect(account.document).toBe("97456321558");
   expect(account.password).toBe("asdQWE123");
@@ -32,7 +32,7 @@ test("Deve restaurar o estado de  uma conta", () => {
 
   expect(account).toBeDefined();
   expect(account.accountId).toBeDefined();
-  expect(account.name).toBe("John Doe");
+  expect(account.getName()).toBe("John Doe");
   expect(account.email).toBe("john.doe@gmail.com");
   expect(account.document).toBe("97456321558");
   expect(account.password).toBe("asdQWE123");
@@ -66,4 +66,27 @@ test("Não deve criar uma conta com senha inválida", () => {
   expect(() => {
     Account.create("John Doe", "john.doe@gmail.com", "97456321558", "123");
   }).toThrow(new Error("Invalid password"));
+});
+
+test("Deve depositar em uma conta", () => {
+  const account = Account.create(
+    "John Doe",
+    "john.doe@gmail.com",
+    "97456321558",
+    "asdQWE123",
+  );
+  account.deposit("USD", 1000);
+  expect(account.getBalance("USD")).toBe(1000);
+});
+
+test("Deve fazer 2 depósitos em uma conta", () => {
+  const account = Account.create(
+    "John Doe",
+    "john.doe@gmail.com",
+    "97456321558",
+    "asdQWE123",
+  );
+  account.deposit("USD", 1000);
+  account.deposit("USD", 500);
+  expect(account.getBalance("USD")).toBe(1500);
 });

@@ -1,14 +1,14 @@
-import { AccountDAODatabase } from "./AccountDAO.ts";
+import { AccountRepositoryDatabase } from "./AccountRepository.ts";
 import { AccountServiceImpl } from "./AccountService.ts";
 import API from "./api.ts";
 import { BalanceDAODatabase } from "./BalanceDAO.ts";
 import { PaymentGatewayHttp } from "./PaymentGateway.ts";
 
-const accountDAO = new AccountDAODatabase();
+const accountRepository = new AccountRepositoryDatabase();
 const balanceDAO = new BalanceDAODatabase();
 const paymentGateway = new PaymentGatewayHttp();
 const accountService = new AccountServiceImpl(
-  accountDAO,
+  accountRepository,
   balanceDAO,
   paymentGateway,
 );
