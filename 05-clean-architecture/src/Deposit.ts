@@ -10,21 +10,19 @@ export class Deposit implements UseCase {
 
   async execute(input: Input): Promise<void> {
     const account = await this.accountRepository.getById(input.accountId);
-    if (account) {
-      const inputProcessTransaction = {
-        creditCardHolder: input.creditCardHolder,
-        creditCardNumber: input.creditCardNumber,
-        creditCardExpDate: input.creditCardExpDate,
-        creditCardCvv: input.creditCardCvv,
-        amount: input.quantity,
-      };
-      const outputProcessTransac = await this.paymentGateway.processTransaction(
-        inputProcessTransaction,
-      );
-      if (outputProcessTransac.autorizada === "1") {
-        account.deposit(input.assetId, input.quantity);
-        await this.accountRepository.update(account);
-      }
+    const inputProcessTransaction = {
+      creditCardHolder: input.creditCardHolder,
+      creditCardNumber: input.creditCardNumber,
+      creditCardExpDate: input.creditCardExpDate,
+      creditCardCvv: input.creditCardCvv,
+      amount: input.quantity,
+    };
+    const outputProcessTransac = await this.paymentGateway.processTransaction(
+      inputProcessTransaction,
+    );
+    if (outputProcessTransac.autorizada === "1") {
+      account.deposit(input.assetId, input.quantity);
+      await this.accountRepository.update(account);
     }
   }
 }

@@ -57,6 +57,9 @@ export class AccountRepositoryDatabase implements AccountRepository {
       "select * from app.account where account_id = $1",
       [accountId],
     );
+    if (!accountData) {
+      throw new Error("Account not found");
+    }
     const balancesData = await connection.query(
       "SELECT * FROM app.balance WHERE account_id = $1",
       [accountId],

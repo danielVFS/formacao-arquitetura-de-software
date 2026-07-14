@@ -6,10 +6,8 @@ export class Withdraw implements UseCase {
 
   async execute(input: Input): Promise<void> {
     const account = await this.accountRepository.getById(input.accountId);
-    if (account) {
-      account.withdraw(input.assetId, input.quantity);
-      await this.accountRepository.update(account);
-    }
+    account.withdraw(input.assetId, input.quantity);
+    await this.accountRepository.update(account);
   }
 }
 

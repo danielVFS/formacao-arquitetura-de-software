@@ -46,6 +46,9 @@ export default class Account {
     const balance = this.balances.find(
       (balance) => balance.assetId === assetId,
     );
+    if (!balance || balance.quantity < quantity)
+      throw new Error("Out of balance");
+
     if (balance) {
       balance.quantity -= quantity;
     }

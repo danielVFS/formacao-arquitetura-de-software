@@ -42,3 +42,49 @@ test("Deve fazer um saque na conta", async () => {
   expect(outputGetAccount.balances[0]?.assetId).toBe("USD");
   expect(outputGetAccount.balances[0]?.quantity).toBe(50);
 });
+
+test("Não deve fazer um saque em uma conta inexistente", async () => {
+  const accountRepository = new AccountRepositoryDatabase();
+  const withdraw = new Withdraw(accountRepository);
+  const inputWithdraw = {
+    accountId: crypto.randomUUID(),
+    assetId: "USD",
+    quantity: 50,
+  };
+  await expect(() => withdraw.execute(inputWithdraw)).rejects.toThrow(
+    new Error("Account not found"),
+  );
+});
+
+test("Não deve fazer um saque em uma conta sem saldo suficiente", async () => {
+  const accountRepository = new AccountRepositoryDatabase();
+  const paymentGateway = new PaymentGatewayFake();
+  const signup = new Signup(accountRepository);
+  const deposit = new Deposit(accountRepository, paymentGateway);
+  const withdraw = new Withdraw(accountRepository);
+  const inputSignup = {
+    name: "John Doe",
+    email: "john.doe@gmail.com",
+    document: "97456321558",
+    password: "asdQWE123",
+  };
+  const outputSignup = await signup.execute(inputSignup);
+  const inputDeposit = {
+    accountId: outputSignup.accountId,
+    assetId: "USD",
+    quantity: 50,
+    creditCardHolder: "JOHN DOE",
+    creditCardNumber: "4012001037141112",
+    creditCardExpDate: "05/2027",
+    creditCardCvv: "123",
+  };
+  await deposit.execute(inputDeposit);
+  const inputWithdraw = {
+    accountId: outputSignup.accountId,
+    assetId: "USD",
+    quantity: 100,
+  };
+  await expect(() => withdraw.execute(inputWithdraw)).rejects.toThrow(
+    new Error("Out of balance"),
+  );
+});

@@ -102,3 +102,16 @@ test("Deve fazer 1 saque em uma conta", () => {
   account.withdraw("USD", 500);
   expect(account.getBalance("USD")).toBe(500);
 });
+
+test("Não deve fazer um saque de uma conta sem saldo suficiente", () => {
+  const account = Account.create(
+    "John Doe",
+    "john.doe@gmail.com",
+    "97456321558",
+    "asdQWE123",
+  );
+  account.deposit("USD", 1000);
+  expect(() => account.withdraw("USD", 1500)).toThrow(
+    new Error("Out of balance"),
+  );
+});
