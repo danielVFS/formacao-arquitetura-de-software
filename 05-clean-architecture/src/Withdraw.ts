@@ -1,7 +1,7 @@
 import type AccountRepository from "./AccountRepository.ts";
-import type Usecase from "./Usecase.ts";
+import type UseCase from "./UseCase.ts";
 
-export class Withdraw implements Usecase {
+export class Withdraw implements UseCase {
   constructor(readonly accountRepository: AccountRepository) {}
 
   async execute(input: Input): Promise<void> {

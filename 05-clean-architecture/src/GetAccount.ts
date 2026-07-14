@@ -1,10 +1,10 @@
 import type AccountRepository from "./AccountRepository.ts";
-import type Usecase from "./Usecase.ts";
+import type UseCase from "./UseCase.ts";
 
-export class GetAccount implements Usecase {
+export class GetAccount implements UseCase {
   constructor(readonly accountRepository: AccountRepository) {}
 
-  async execute(input: { accountId: string }): Promise<GetAccountOutput> {
+  async execute(input: { accountId: string }): Promise<Output> {
     const account = await this.accountRepository.getById(input.accountId);
     const output = {
       accountId: account.accountId,
@@ -21,7 +21,7 @@ export class GetAccount implements Usecase {
   }
 }
 
-type GetAccountOutput = {
+type Output = {
   accountId: string;
   name: string;
   email: string;
