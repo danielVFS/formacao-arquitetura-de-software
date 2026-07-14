@@ -90,3 +90,15 @@ test("Deve fazer 2 depósitos em uma conta", () => {
   account.deposit("USD", 500);
   expect(account.getBalance("USD")).toBe(1500);
 });
+
+test("Deve fazer 1 saque em uma conta", () => {
+  const account = Account.create(
+    "John Doe",
+    "john.doe@gmail.com",
+    "97456321558",
+    "asdQWE123",
+  );
+  account.deposit("USD", 1000);
+  account.withdraw("USD", 500);
+  expect(account.getBalance("USD")).toBe(500);
+});

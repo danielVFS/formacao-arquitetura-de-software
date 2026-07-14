@@ -42,6 +42,15 @@ export default class Account {
     }
   }
 
+  withdraw(assetId: string, quantity: number) {
+    const balance = this.balances.find(
+      (balance) => balance.assetId === assetId,
+    );
+    if (balance) {
+      balance.quantity -= quantity;
+    }
+  }
+
   getBalance(assetId: string) {
     const balance = this.balances.find(
       (balance) => balance.assetId === assetId,
