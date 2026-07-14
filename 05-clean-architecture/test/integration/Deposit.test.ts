@@ -1,54 +1,28 @@
 import sinon from "sinon";
 import { expect, test } from "vitest";
 import Account from "../../src/Account.ts";
-import {
-  AccountRepositoryDatabase,
-  AccountRepositoryFake,
-} from "../../src/AccountRepository.ts";
-import { AccountServiceImpl } from "../../src/AccountService.ts";
+import { AccountRepositoryDatabase } from "../../src/AccountRepository.ts";
+import { Deposit } from "../../src/Deposit.ts";
+import { GetAccount } from "../../src/GetAccount.ts";
 import {
   PaymentGatewayFake,
   PaymentGatewayHttp,
 } from "../../src/PaymentGateway.ts";
-
-test("Deve criar uma conta", async () => {
-  const accountRepository = new AccountRepositoryDatabase();
-  const paymentGateway = new PaymentGatewayFake();
-  const accountService = new AccountServiceImpl(
-    accountRepository,
-    paymentGateway,
-  );
-  const input = {
-    name: "John Doe",
-    email: "john.doe@gmail.com",
-    document: "97456321558",
-    password: "asdQWE123",
-  };
-  const outputSignup = await accountService.signup(input);
-  const outputGetAccount = await accountService.getAccount(
-    outputSignup.accountId,
-  );
-  expect(outputGetAccount.accountId).toBe(outputSignup.accountId);
-  expect(outputGetAccount.name).toBe(input.name);
-  expect(outputGetAccount.email).toBe(input.email);
-  expect(outputGetAccount.document).toBe(input.document);
-  expect(outputGetAccount.password).toBe(input.password);
-});
+import { Signup } from "../../src/Signup.ts";
 
 test("Deve fazer dois depósitos do mesmo tipo de recurso em uma conta", async () => {
   const accountRepository = new AccountRepositoryDatabase();
   const paymentGateway = new PaymentGatewayFake();
-  const accountService = new AccountServiceImpl(
-    accountRepository,
-    paymentGateway,
-  );
+  const signup = new Signup(accountRepository);
+  const getAccount = new GetAccount(accountRepository);
+  const deposit = new Deposit(accountRepository, paymentGateway);
   const inputSignup = {
     name: "John Doe",
     email: "john.doe@gmail.com",
     document: "97456321558",
     password: "asdQWE123",
   };
-  const outputSignup = await accountService.signup(inputSignup);
+  const outputSignup = await signup.execute(inputSignup);
   const inputDeposit = {
     accountId: outputSignup.accountId,
     assetId: "USD",
@@ -58,22 +32,21 @@ test("Deve fazer dois depósitos do mesmo tipo de recurso em uma conta", async (
     creditCardExpDate: "05/2027",
     creditCardCvv: "123",
   };
-  await accountService.deposit(inputDeposit);
-  await accountService.deposit(inputDeposit);
-  const outputGetAccount = await accountService.getAccount(
-    outputSignup.accountId,
-  );
+  await deposit.execute(inputDeposit);
+  await deposit.execute(inputDeposit);
+  const outputGetAccount = await getAccount.execute({
+    accountId: outputSignup.accountId,
+  });
   expect(outputGetAccount.balances[0]?.assetId).toBe("USD");
   expect(outputGetAccount.balances[0]?.quantity).toBe(200);
 });
 
 test.skip("Deve fazer um depósito em uma conta spy", async () => {
   const accountRepository = new AccountRepositoryDatabase();
-  const paymentGateway = new PaymentGatewayHttp();
-  const accountService = new AccountServiceImpl(
-    accountRepository,
-    paymentGateway,
-  );
+  const paymentGateway = new PaymentGatewayFake();
+  const signup = new Signup(accountRepository);
+  const getAccount = new GetAccount(accountRepository);
+  const deposit = new Deposit(accountRepository, paymentGateway);
   const processTransactionSpy = sinon.spy(
     PaymentGatewayHttp.prototype,
     "processTransaction",
@@ -84,7 +57,7 @@ test.skip("Deve fazer um depósito em uma conta spy", async () => {
     document: "97456321558",
     password: "asdQWE123",
   };
-  const outputSignup = await accountService.signup(inputSignup);
+  const outputSignup = await signup.execute(inputSignup);
   const inputDeposit = {
     accountId: outputSignup.accountId,
     assetId: "USD",
@@ -94,10 +67,10 @@ test.skip("Deve fazer um depósito em uma conta spy", async () => {
     creditCardExpDate: "05/2027",
     creditCardCvv: "123",
   };
-  await accountService.deposit(inputDeposit);
-  const outputGetAccount = await accountService.getAccount(
-    outputSignup.accountId,
-  );
+  await deposit.execute(inputDeposit);
+  const outputGetAccount = await getAccount.execute({
+    accountId: outputSignup.accountId,
+  });
   expect(outputGetAccount.balances[0]?.assetId).toBe("USD");
   expect(outputGetAccount.balances[0]?.quantity).toBe(100);
   expect(processTransactionSpy.calledOnce).toBe(true);
@@ -116,10 +89,9 @@ test.skip("Deve fazer um depósito em uma conta spy", async () => {
 test("Deve fazer um depósito em uma conta mock", async () => {
   const accountRepository = new AccountRepositoryDatabase();
   const paymentGateway = new PaymentGatewayHttp();
-  const accountService = new AccountServiceImpl(
-    accountRepository,
-    paymentGateway,
-  );
+  const signup = new Signup(accountRepository);
+  const getAccount = new GetAccount(accountRepository);
+  const deposit = new Deposit(accountRepository, paymentGateway);
   const accountRepositoryMock = sinon.mock(AccountRepositoryDatabase.prototype);
   const paymentGatewayMock = sinon.mock(PaymentGatewayHttp.prototype);
   const inputSignup = {
@@ -129,7 +101,7 @@ test("Deve fazer um depósito em uma conta mock", async () => {
     password: "asdQWE123",
   };
   accountRepositoryMock.expects("save").once().resolves();
-  const outputSignup = await accountService.signup(inputSignup);
+  const outputSignup = await signup.execute(inputSignup);
   const inputDeposit = {
     accountId: outputSignup.accountId,
     assetId: "USD",
@@ -162,10 +134,10 @@ test("Deve fazer um depósito em uma conta mock", async () => {
     .resolves({
       autorizada: "1",
     });
-  await accountService.deposit(inputDeposit);
-  const outputGetAccount = await accountService.getAccount(
-    outputSignup.accountId,
-  );
+  await deposit.execute(inputDeposit);
+  const outputGetAccount = await getAccount.execute({
+    accountId: outputSignup.accountId,
+  });
   expect(outputGetAccount.balances[0]?.assetId).toBe("USD");
   expect(outputGetAccount.balances[0]?.quantity).toBe(100);
   accountRepositoryMock.verify();
@@ -175,19 +147,18 @@ test("Deve fazer um depósito em uma conta mock", async () => {
 });
 
 test("Deve fazer um depósito em uma conta com fake", async () => {
-  const accountRepository = new AccountRepositoryFake();
+  const accountRepository = new AccountRepositoryDatabase();
   const paymentGateway = new PaymentGatewayFake();
-  const accountService = new AccountServiceImpl(
-    accountRepository,
-    paymentGateway,
-  );
+  const signup = new Signup(accountRepository);
+  const getAccount = new GetAccount(accountRepository);
+  const deposit = new Deposit(accountRepository, paymentGateway);
   const inputSignup = {
     name: "John Doe",
     email: "john.doe@gmail.com",
     document: "97456321558",
     password: "asdQWE123",
   };
-  const outputSignup = await accountService.signup(inputSignup);
+  const outputSignup = await signup.execute(inputSignup);
   const inputDeposit = {
     accountId: outputSignup.accountId,
     assetId: "USD",
@@ -197,10 +168,10 @@ test("Deve fazer um depósito em uma conta com fake", async () => {
     creditCardExpDate: "05/2027",
     creditCardCvv: "123",
   };
-  await accountService.deposit(inputDeposit);
-  const outputGetAccount = await accountService.getAccount(
-    outputSignup.accountId,
-  );
+  await deposit.execute(inputDeposit);
+  const outputGetAccount = await getAccount.execute({
+    accountId: outputSignup.accountId,
+  });
   expect(outputGetAccount.balances[0]?.assetId).toBe("USD");
   expect(outputGetAccount.balances[0]?.quantity).toBe(100);
 });
