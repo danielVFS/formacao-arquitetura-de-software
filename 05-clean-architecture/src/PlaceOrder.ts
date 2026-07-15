@@ -10,7 +10,6 @@ export class PlaceOrder implements UseCase {
   ) {}
 
   async execute(input: Input): Promise<Output> {
-    const account = await this.accountRepository.getById(input.accountId);
     const order = Order.create(
       input.accountId,
       input.marketId,
