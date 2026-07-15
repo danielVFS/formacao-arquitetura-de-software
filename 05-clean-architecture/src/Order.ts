@@ -6,9 +6,9 @@ export default class Order {
     readonly side: string,
     readonly quantity: number,
     readonly price: number,
-    readonly fillQuantity: number,
-    readonly fillPrice: number,
-    readonly status: string,
+    public fillQuantity: number,
+    public fillPrice: number,
+    public status: string,
     readonly timestamp: Date,
   ) {}
 
@@ -36,5 +36,13 @@ export default class Order {
       status,
       timestamp,
     );
+  }
+
+  fill(quantity: number, price: number) {
+    this.fillQuantity += quantity;
+    this.fillPrice = price;
+    if (this.fillQuantity === this.quantity) {
+      this.status = "closed";
+    }
   }
 }
