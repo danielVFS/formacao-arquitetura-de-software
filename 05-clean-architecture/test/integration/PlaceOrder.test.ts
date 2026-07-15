@@ -1,6 +1,8 @@
 import { expect, test } from "vitest";
 import { AccountRepositoryDatabase } from "../../src/AccountRepository.ts";
+import { ExecuteOrder } from "../../src/ExecuteOrder.ts";
 import { GetOrder } from "../../src/GetOrder.ts";
+import Mediator from "../../src/Mediator.ts";
 import { OrderRepositoryDatabase } from "../../src/OrderRepositoryDatabase.ts";
 import { PlaceOrder } from "../../src/PlaceOrder.ts";
 import { Signup } from "../../src/Signup.ts";
@@ -10,7 +12,12 @@ test("Deve criar uma orderm de compra", async () => {
   const accountRepository = new AccountRepositoryDatabase();
   const orderRepository = new OrderRepositoryDatabase();
   const signup = new Signup(accountRepository);
-  const placeOrder = new PlaceOrder(accountRepository, orderRepository);
+  const mediator = new Mediator();
+  const placeOrder = new PlaceOrder(
+    accountRepository,
+    orderRepository,
+    mediator,
+  );
   const getOrder = new GetOrder(orderRepository);
 
   const inputSignup = {
@@ -44,7 +51,16 @@ test("Deve executar uma orderm de compra com uma ordem de venda", async () => {
   const accountRepository = new AccountRepositoryDatabase();
   const orderRepository = new OrderRepositoryDatabase();
   const signup = new Signup(accountRepository);
-  const placeOrder = new PlaceOrder(accountRepository, orderRepository);
+  const mediator = new Mediator();
+  const executeOrder = new ExecuteOrder(orderRepository);
+  mediator.register("orderPlaced", async (event: any) => {
+    await executeOrder.execute(event.marketId);
+  });
+  const placeOrder = new PlaceOrder(
+    accountRepository,
+    orderRepository,
+    mediator,
+  );
   const getOrder = new GetOrder(orderRepository);
 
   const inputSignup = {
@@ -91,7 +107,16 @@ test("Deve executar uma orderm de compra com duas ordens de venda", async () => 
   const accountRepository = new AccountRepositoryDatabase();
   const orderRepository = new OrderRepositoryDatabase();
   const signup = new Signup(accountRepository);
-  const placeOrder = new PlaceOrder(accountRepository, orderRepository);
+  const mediator = new Mediator();
+  const executeOrder = new ExecuteOrder(orderRepository);
+  mediator.register("orderPlaced", async (event: any) => {
+    await executeOrder.execute(event.marketId);
+  });
+  const placeOrder = new PlaceOrder(
+    accountRepository,
+    orderRepository,
+    mediator,
+  );
   const getOrder = new GetOrder(orderRepository);
 
   const inputSignup = {

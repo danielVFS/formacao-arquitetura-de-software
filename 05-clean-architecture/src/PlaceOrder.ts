@@ -1,5 +1,5 @@
 import type AccountRepository from "./AccountRepository.ts";
-import { ExecuteOrder } from "./ExecuteOrder.ts";
+import type Mediator from "./Mediator.ts";
 import Order from "./Order.ts";
 import type OrderRepository from "./OrderRepositoryDatabase.ts";
 import type UseCase from "./UseCase.ts";
@@ -8,10 +8,10 @@ export class PlaceOrder implements UseCase {
   constructor(
     readonly accountRepository: AccountRepository,
     readonly orderRepository: OrderRepository,
+    readonly mediator: Mediator,
   ) {}
 
   async execute(input: Input): Promise<Output> {
-    const account = await this.accountRepository.getById(input.accountId);
     const order = Order.create(
       input.accountId,
       input.marketId,
@@ -20,9 +20,10 @@ export class PlaceOrder implements UseCase {
       input.price,
     );
     await this.orderRepository.save(order);
-
-    const executeOrder = new ExecuteOrder(this.orderRepository);
-    await executeOrder.execute(input.marketId);
+    await this.mediator.notifyAll("orderPlaced", {
+      orderId: order.orderId,
+      marketId: input.marketId,
+    });
 
     return {
       orderId: order.orderId,
