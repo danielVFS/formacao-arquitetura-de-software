@@ -5,7 +5,7 @@ import { ExecuteOrder } from "./ExecuteOrder.ts";
 import { GetAccount } from "./GetAccount.ts";
 import { GetOrder } from "./GetOrder.ts";
 import Mediator from "./Mediator.ts";
-import { OrderRepositoryDatabase } from "./OrderRepositoryDatabase.ts";
+import { OrderRepositoryDatabase } from "./OrderRepository.ts";
 import { PaymentGatewayHttp } from "./PaymentGateway.ts";
 import { PlaceOrder } from "./PlaceOrder.ts";
 import { Signup } from "./Signup.ts";

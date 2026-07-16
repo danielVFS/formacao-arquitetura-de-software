@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import Order from "../../src/Order.ts";
-import { OrderRepositoryDatabase } from "../../src/OrderRepositoryDatabase.ts";
+import { OrderRepositoryDatabase } from "../../src/OrderRepository.ts";
 
 test("Deve persistir uma orderm de compra", async () => {
   const orderRepository = new OrderRepositoryDatabase();

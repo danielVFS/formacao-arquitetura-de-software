@@ -3,7 +3,7 @@ import { AccountRepositoryDatabase } from "../../src/AccountRepository.ts";
 import { ExecuteOrder } from "../../src/ExecuteOrder.ts";
 import { GetOrder } from "../../src/GetOrder.ts";
 import Mediator from "../../src/Mediator.ts";
-import { OrderRepositoryDatabase } from "../../src/OrderRepositoryDatabase.ts";
+import { OrderRepositoryDatabase } from "../../src/OrderRepository.ts";
 import { PlaceOrder } from "../../src/PlaceOrder.ts";
 import { Signup } from "../../src/Signup.ts";
 
