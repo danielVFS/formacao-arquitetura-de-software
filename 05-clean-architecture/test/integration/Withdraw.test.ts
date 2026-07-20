@@ -1,13 +1,22 @@
-import { expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test } from "vitest";
+import type AccountRepository from "../../src/AccountRepository.ts";
 import { AccountRepositoryDatabase } from "../../src/AccountRepository.ts";
+import { PgPromiseAdapter } from "../../src/DatabaseConnection.ts";
 import { Deposit } from "../../src/Deposit.ts";
 import { GetAccount } from "../../src/GetAccount.ts";
 import { PaymentGatewayFake } from "../../src/PaymentGateway.ts";
 import { Signup } from "../../src/Signup.ts";
 import { Withdraw } from "../../src/Withdraw.ts";
 
+let databaseConnection: PgPromiseAdapter;
+let accountRepository: AccountRepository;
+
+beforeEach(async () => {
+  databaseConnection = new PgPromiseAdapter();
+  accountRepository = new AccountRepositoryDatabase(databaseConnection);
+});
+
 test("Deve fazer um saque na conta", async () => {
-  const accountRepository = new AccountRepositoryDatabase();
   const paymentGateway = new PaymentGatewayFake();
   const signup = new Signup(accountRepository);
   const getAccount = new GetAccount(accountRepository);
@@ -44,7 +53,6 @@ test("Deve fazer um saque na conta", async () => {
 });
 
 test("Não deve fazer um saque em uma conta inexistente", async () => {
-  const accountRepository = new AccountRepositoryDatabase();
   const withdraw = new Withdraw(accountRepository);
   const inputWithdraw = {
     accountId: crypto.randomUUID(),
@@ -57,7 +65,6 @@ test("Não deve fazer um saque em uma conta inexistente", async () => {
 });
 
 test("Não deve fazer um saque em uma conta sem saldo suficiente", async () => {
-  const accountRepository = new AccountRepositoryDatabase();
   const paymentGateway = new PaymentGatewayFake();
   const signup = new Signup(accountRepository);
   const deposit = new Deposit(accountRepository, paymentGateway);
@@ -87,4 +94,8 @@ test("Não deve fazer um saque em uma conta sem saldo suficiente", async () => {
   await expect(() => withdraw.execute(inputWithdraw)).rejects.toThrow(
     new Error("Out of balance"),
   );
+});
+
+afterEach(async () => {
+  await databaseConnection.close();
 });

@@ -1,16 +1,27 @@
-import { expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test } from "vitest";
+import type AccountRepository from "../../src/AccountRepository.ts";
 import { AccountRepositoryDatabase } from "../../src/AccountRepository.ts";
+import { PgPromiseAdapter } from "../../src/DatabaseConnection.ts";
 import { ExecuteOrder } from "../../src/ExecuteOrder.ts";
 import { GetOrder } from "../../src/GetOrder.ts";
 import Mediator from "../../src/Mediator.ts";
+import type OrderRepository from "../../src/OrderRepository.ts";
 import { OrderRepositoryDatabase } from "../../src/OrderRepository.ts";
 import { PlaceOrder } from "../../src/PlaceOrder.ts";
 import { Signup } from "../../src/Signup.ts";
 
+let databaseConnection: PgPromiseAdapter;
+let accountRepository: AccountRepository;
+let orderRepository: OrderRepository;
+
+beforeEach(async () => {
+  databaseConnection = new PgPromiseAdapter();
+  accountRepository = new AccountRepositoryDatabase(databaseConnection);
+  orderRepository = new OrderRepositoryDatabase(databaseConnection);
+});
+
 test("Deve criar uma orderm de compra", async () => {
   const marketId = `BTC-USD-${Math.random()}`;
-  const accountRepository = new AccountRepositoryDatabase();
-  const orderRepository = new OrderRepositoryDatabase();
   const signup = new Signup(accountRepository);
   const mediator = new Mediator();
   const placeOrder = new PlaceOrder(
@@ -48,8 +59,6 @@ test("Deve criar uma orderm de compra", async () => {
 
 test("Deve executar uma orderm de compra com uma ordem de venda", async () => {
   const marketId = `BTC-USD-${Math.random()}`;
-  const accountRepository = new AccountRepositoryDatabase();
-  const orderRepository = new OrderRepositoryDatabase();
   const signup = new Signup(accountRepository);
   const mediator = new Mediator();
   const executeOrder = new ExecuteOrder(orderRepository);
@@ -104,8 +113,6 @@ test("Deve executar uma orderm de compra com uma ordem de venda", async () => {
 
 test("Deve executar uma orderm de compra com duas ordens de venda", async () => {
   const marketId = `BTC-USD-${Math.random()}`;
-  const accountRepository = new AccountRepositoryDatabase();
-  const orderRepository = new OrderRepositoryDatabase();
   const signup = new Signup(accountRepository);
   const mediator = new Mediator();
   const executeOrder = new ExecuteOrder(orderRepository);
@@ -171,4 +178,8 @@ test("Deve executar uma orderm de compra com duas ordens de venda", async () => 
   expect(outputGetOrderBuy.status).toBe("closed");
   expect(outputGetOrderSell1.status).toBe("closed");
   expect(outputGetOrderSell2.status).toBe("closed");
+});
+
+afterEach(async () => {
+  await databaseConnection.close();
 });

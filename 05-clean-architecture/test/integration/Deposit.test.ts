@@ -1,12 +1,21 @@
-import { expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test } from "vitest";
+import type AccountRepository from "../../src/AccountRepository.ts";
 import { AccountRepositoryDatabase } from "../../src/AccountRepository.ts";
+import { PgPromiseAdapter } from "../../src/DatabaseConnection.ts";
 import { Deposit } from "../../src/Deposit.ts";
 import { GetAccount } from "../../src/GetAccount.ts";
 import { PaymentGatewayFake } from "../../src/PaymentGateway.ts";
 import { Signup } from "../../src/Signup.ts";
 
+let databaseConnection: PgPromiseAdapter;
+let accountRepository: AccountRepository;
+
+beforeEach(async () => {
+  databaseConnection = new PgPromiseAdapter();
+  accountRepository = new AccountRepositoryDatabase(databaseConnection);
+});
+
 test("Deve fazer dois depósitos do mesmo tipo de recurso em uma conta", async () => {
-  const accountRepository = new AccountRepositoryDatabase();
   const paymentGateway = new PaymentGatewayFake();
   const signup = new Signup(accountRepository);
   const getAccount = new GetAccount(accountRepository);
@@ -37,7 +46,6 @@ test("Deve fazer dois depósitos do mesmo tipo de recurso em uma conta", async (
 });
 
 test("Não deve fazer um depósito em uma conta inexistente", async () => {
-  const accountRepository = new AccountRepositoryDatabase();
   const paymentGateway = new PaymentGatewayFake();
   const deposit = new Deposit(accountRepository, paymentGateway);
   const inputDeposit = {
@@ -52,4 +60,8 @@ test("Não deve fazer um depósito em uma conta inexistente", async () => {
   await expect(() => deposit.execute(inputDeposit)).rejects.toThrow(
     new Error("Account not found"),
   );
+});
+
+afterEach(async () => {
+  await databaseConnection.close();
 });

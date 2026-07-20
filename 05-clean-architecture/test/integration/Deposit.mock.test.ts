@@ -1,17 +1,27 @@
 import sinon from "sinon";
-import { expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test } from "vitest";
 import Account from "../../src/Account.ts";
+import type AccountRepository from "../../src/AccountRepository.ts";
 import { AccountRepositoryDatabase } from "../../src/AccountRepository.ts";
+import { PgPromiseAdapter } from "../../src/DatabaseConnection.ts";
 import { Deposit } from "../../src/Deposit.ts";
 import { GetAccount } from "../../src/GetAccount.ts";
+import { AxiosAdapter } from "../../src/HttpClient.ts";
 import {
   PaymentGatewayFake,
   PaymentGatewayHttp,
 } from "../../src/PaymentGateway.ts";
 import { Signup } from "../../src/Signup.ts";
 
+let databaseConnection: PgPromiseAdapter;
+let accountRepository: AccountRepository;
+
+beforeEach(async () => {
+  databaseConnection = new PgPromiseAdapter();
+  accountRepository = new AccountRepositoryDatabase(databaseConnection);
+});
+
 test.skip("Deve fazer um depósito em uma conta spy", async () => {
-  const accountRepository = new AccountRepositoryDatabase();
   const paymentGateway = new PaymentGatewayFake();
   const signup = new Signup(accountRepository);
   const getAccount = new GetAccount(accountRepository);
@@ -56,8 +66,8 @@ test.skip("Deve fazer um depósito em uma conta spy", async () => {
 });
 
 test("Deve fazer um depósito em uma conta mock", async () => {
-  const accountRepository = new AccountRepositoryDatabase();
-  const paymentGateway = new PaymentGatewayHttp();
+  const httpClient = new AxiosAdapter();
+  const paymentGateway = new PaymentGatewayHttp(httpClient);
   const signup = new Signup(accountRepository);
   const getAccount = new GetAccount(accountRepository);
   const deposit = new Deposit(accountRepository, paymentGateway);
@@ -116,7 +126,6 @@ test("Deve fazer um depósito em uma conta mock", async () => {
 });
 
 test("Deve fazer um depósito em uma conta com fake", async () => {
-  const accountRepository = new AccountRepositoryDatabase();
   const paymentGateway = new PaymentGatewayFake();
   const signup = new Signup(accountRepository);
   const getAccount = new GetAccount(accountRepository);
@@ -143,4 +152,8 @@ test("Deve fazer um depósito em uma conta com fake", async () => {
   });
   expect(outputGetAccount.balances[0]?.assetId).toBe("USD");
   expect(outputGetAccount.balances[0]?.quantity).toBe(100);
+});
+
+afterEach(async () => {
+  await databaseConnection.close();
 });
