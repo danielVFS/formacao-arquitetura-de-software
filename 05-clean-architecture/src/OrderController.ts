@@ -2,7 +2,7 @@ import type { GetOrder } from "./GetOrder.ts";
 import type HttpServer from "./HttpServer.ts";
 import type { PlaceOrder } from "./PlaceOrder.ts";
 
-export default class AccountController {
+export default class OrderController {
   constructor(
     readonly httpServer: HttpServer,
     readonly placeOrder: PlaceOrder,
