@@ -11,11 +11,11 @@ export class ExecuteOrder implements UseCase {
         "open",
       );
       const highestBuy = orders
-        .filter((order) => order.side === "buy")
-        .sort((a, b) => b.price - a.price)[0];
+        .filter((order: any) => order.side === "buy")
+        .sort((a: any, b: any) => b.price - a.price)[0];
       const lowestSell = orders
-        .filter((order) => order.side === "sell")
-        .sort((a, b) => a.price - b.price)[0];
+        .filter((order: any) => order.side === "sell")
+        .sort((a: any, b: any) => a.price - b.price)[0];
       if (!highestBuy || !lowestSell) {
         break;
       }

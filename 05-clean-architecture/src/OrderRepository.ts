@@ -1,4 +1,4 @@
-import pgp from "pg-promise";
+import type DatabaseConnection from "./DatabaseConnection.ts";
 import Order from "./Order.ts";
 
 export default interface OrderRepository {
@@ -9,9 +9,10 @@ export default interface OrderRepository {
 }
 
 export class OrderRepositoryDatabase implements OrderRepository {
+  constructor(readonly databaseConnection: DatabaseConnection) {}
+
   async save(order: Order): Promise<void> {
-    const connection = pgp()("postgres://postgres:123456@localhost:5432/app");
-    await connection.query(
+    await this.databaseConnection.query(
       "insert into app.order (order_id, account_id, market_id, side, quantity, price, fill_quantity, fill_price, status, timestamp) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
       [
         order.orderId,
@@ -26,22 +27,17 @@ export class OrderRepositoryDatabase implements OrderRepository {
         order.timestamp,
       ],
     );
-    await connection.$pool.end();
   }
 
   async update(order: Order): Promise<void> {
-    const connection = pgp()("postgres://postgres:123456@localhost:5432/app");
-    await connection.query(
+    await this.databaseConnection.query(
       "update app.order set status = $1, fill_quantity = $2, fill_price = $3 where order_id = $4",
       [order.status, order.fillQuantity, order.fillPrice, order.orderId],
     );
-
-    await connection.$pool.end();
   }
 
   async getById(orderId: string): Promise<Order> {
-    const connection = pgp()("postgres://postgres:123456@localhost:5432/app");
-    const [orderData] = await connection.query(
+    const [orderData] = await this.databaseConnection.query(
       "select * from app.order where order_id = $1",
       [orderId],
     );
@@ -57,7 +53,6 @@ export class OrderRepositoryDatabase implements OrderRepository {
       orderData.status,
       new Date(orderData.timestamp),
     );
-    await connection.$pool.end();
     return order;
   }
 
@@ -65,8 +60,7 @@ export class OrderRepositoryDatabase implements OrderRepository {
     marketId: string,
     status: string,
   ): Promise<Order[]> {
-    const connection = pgp()("postgres://postgres:123456@localhost:5432/app");
-    const ordersData = await connection.query(
+    const ordersData = await this.databaseConnection.query(
       "select * from app.order where market_id = $1 and status = $2",
       [marketId, status],
     );
@@ -87,7 +81,6 @@ export class OrderRepositoryDatabase implements OrderRepository {
         ),
       );
     }
-    await connection.$pool.end();
     return orders;
   }
 }

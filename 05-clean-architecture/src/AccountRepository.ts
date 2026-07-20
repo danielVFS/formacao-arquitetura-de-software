@@ -1,5 +1,5 @@
-import pgp from "pg-promise";
 import Account, { type Balance } from "./Account.ts";
+import type DatabaseConnection from "./DatabaseConnection.ts";
 
 export default interface AccountRepository {
   save(account: Account): Promise<void>;
@@ -9,9 +9,10 @@ export default interface AccountRepository {
 }
 
 export class AccountRepositoryDatabase implements AccountRepository {
+  constructor(readonly databaseConnection: DatabaseConnection) {}
+
   async save(account: Account): Promise<void> {
-    const connection = pgp()("postgres://postgres:123456@localhost:5432/app");
-    await connection.query(
+    await this.databaseConnection.query(
       "insert into app.account (account_id, name, email, document, password) values ($1, $2, $3, $4, $5)",
       [
         account.accountId,
@@ -22,17 +23,15 @@ export class AccountRepositoryDatabase implements AccountRepository {
       ],
     );
     for (const balance of account.balances) {
-      await connection.query(
+      await this.databaseConnection.query(
         "INSERT INTO app.balance (account_id, asset_id, quantity) VALUES ($1, $2, $3) on conflict (account_id, asset_id) do update set quantity = excluded.quantity",
         [account.accountId, balance.assetId, balance.quantity],
       );
     }
-    await connection.$pool.end();
   }
 
   async update(account: Account): Promise<void> {
-    const connection = pgp()("postgres://postgres:123456@localhost:5432/app");
-    await connection.query(
+    await this.databaseConnection.query(
       "update app.account set name = $1, email = $2, document = $3, password = $4 where account_id = $5",
       [
         account.getName(),
@@ -43,16 +42,15 @@ export class AccountRepositoryDatabase implements AccountRepository {
       ],
     );
     for (const balance of account.balances) {
-      await connection.query(
+      await this.databaseConnection.query(
         "INSERT INTO app.balance (account_id, asset_id, quantity) VALUES ($1, $2, $3) on conflict (account_id, asset_id) do update set quantity = excluded.quantity",
         [account.accountId, balance.assetId, balance.quantity],
       );
     }
-    await connection.$pool.end();
   }
 
   async getById(accountId: string): Promise<Account> {
-    const connection = pgp()("postgres://postgres:123456@localhost:5432/app");
+    const connection = this.databaseConnection;
     const [accountData] = await connection.query(
       "select * from app.account where account_id = $1",
       [accountId],
@@ -79,13 +77,11 @@ export class AccountRepositoryDatabase implements AccountRepository {
       accountData.password,
       balances,
     );
-    await connection.$pool.end();
     return account;
   }
 
   async list(): Promise<Account[]> {
-    const connection = pgp()("postgres://postgres:123456@localhost:5432/app");
-    const accountsData = await connection.query(
+    const accountsData = await this.databaseConnection.query(
       "select * from app.account",
       [],
     );
@@ -101,7 +97,6 @@ export class AccountRepositoryDatabase implements AccountRepository {
       );
       accounts.push(account);
     }
-    await connection.$pool.end();
     return accounts;
   }
 }
