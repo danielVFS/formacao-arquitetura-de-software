@@ -1,5 +1,6 @@
 import { AccountRepositoryDatabase } from "./AccountRepository.ts";
 import API from "./api.ts";
+import { PgPromiseAdapter } from "./DatabaseConnection.ts";
 import { Deposit } from "./Deposit.ts";
 import { ExecuteOrder } from "./ExecuteOrder.ts";
 import { GetAccount } from "./GetAccount.ts";
@@ -11,8 +12,9 @@ import { PaymentGatewayHttp } from "./PaymentGateway.ts";
 import { PlaceOrder } from "./PlaceOrder.ts";
 import { Signup } from "./Signup.ts";
 
-const accountRepository = new AccountRepositoryDatabase();
-const orderRepository = new OrderRepositoryDatabase();
+const databaseConnection = new PgPromiseAdapter();
+const accountRepository = new AccountRepositoryDatabase(databaseConnection);
+const orderRepository = new OrderRepositoryDatabase(databaseConnection);
 const paymentGateway = new PaymentGatewayHttp();
 const signup = new Signup(accountRepository);
 const getAccount = new GetAccount(accountRepository);

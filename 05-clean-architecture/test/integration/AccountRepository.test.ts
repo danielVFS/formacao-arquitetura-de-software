@@ -1,9 +1,18 @@
-import { expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test } from "vitest";
 import Account from "../../src/Account.ts";
+import type AccountRepository from "../../src/AccountRepository.ts";
 import { AccountRepositoryDatabase } from "../../src/AccountRepository.ts";
+import { PgPromiseAdapter } from "../../src/DatabaseConnection.ts";
+
+let databaseConnection: PgPromiseAdapter;
+let accountRepository: AccountRepository;
+
+beforeEach(async () => {
+  databaseConnection = new PgPromiseAdapter();
+  accountRepository = new AccountRepositoryDatabase(databaseConnection);
+});
 
 test("Deve persistir um conta", async () => {
-  const accountRepository = new AccountRepositoryDatabase();
   const account = Account.create(
     "John Doe",
     "john.doe@gmail.com",
@@ -22,7 +31,6 @@ test("Deve persistir um conta", async () => {
 });
 
 test("Deve persistir com recursos", async () => {
-  const accountRepository = new AccountRepositoryDatabase();
   const account = Account.create(
     "John Doe",
     "john.doe@gmail.com",
@@ -39,7 +47,6 @@ test("Deve persistir com recursos", async () => {
 });
 
 test("Deve atualizar uma conta com recursos", async () => {
-  const accountRepository = new AccountRepositoryDatabase();
   const account = Account.create(
     "John Doe",
     "john.doe@gmail.com",
@@ -59,4 +66,8 @@ test("Deve atualizar uma conta com recursos", async () => {
   expect(updatedAccount.getName()).toBe("John Cooper");
   expect(savedAccount.balances[0]?.assetId).toBe("USD");
   expect(updatedAccount.balances[0]?.quantity).toBe(2000);
+});
+
+afterEach(async () => {
+  await databaseConnection.close();
 });
