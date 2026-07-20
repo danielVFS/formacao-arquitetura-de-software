@@ -8,7 +8,7 @@ export default class AccountController {
     readonly signup: Signup,
     readonly getAccount: GetAccount,
   ) {
-    httpServer.route("post", "signup", async (params: any, body: any) => {
+    httpServer.route("post", "/signup", async (params: any, body: any) => {
       const input = body;
       const output = await this.signup.execute(input);
       return { accountId: output.accountId };

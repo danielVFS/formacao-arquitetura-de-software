@@ -10,9 +10,9 @@ export class ExpressAdapter implements HttpServer {
   app: any;
 
   constructor() {
-    const app = express();
-    app.use(express.json());
-    app.use(cors());
+    this.app = express();
+    this.app.use(express.json());
+    this.app.use(cors());
   }
 
   route(method: string, url: string, callback: Function): void {
