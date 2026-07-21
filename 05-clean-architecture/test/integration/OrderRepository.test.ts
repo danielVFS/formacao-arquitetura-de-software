@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { PgPromiseAdapter } from "../../src/DatabaseConnection.ts";
-import Order from "../../src/Order.ts";
-import type OrderRepository from "../../src/OrderRepository.ts";
-import { OrderRepositoryDatabase } from "../../src/OrderRepository.ts";
+import Order from "../../src/domain/Order.ts";
+import { PgPromiseAdapter } from "../../src/infra/database/DatabaseConnection.ts";
+import type OrderRepository from "../../src/infra/repository/OrderRepository.ts";
+import { OrderRepositoryDatabase } from "../../src/infra/repository/OrderRepository.ts";
 
 let databaseConnection: PgPromiseAdapter;
 let orderRepository: OrderRepository;

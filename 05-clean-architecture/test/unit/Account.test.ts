@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import Account, { type Balance } from "../../src/Account.ts";
+import Account, { type Balance } from "../../src/domain/Account.ts";
 
 test("Deve criar uma conta", () => {
   const account = Account.create(

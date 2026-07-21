@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import Order from "../../src/Order.ts";
+import Order from "../../src/domain/Order.ts";
 
 test("Deve criar uma orderm de compra", async () => {
   const accountId = crypto.randomUUID();

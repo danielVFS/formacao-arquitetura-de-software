@@ -1,4 +1,4 @@
-import type OrderRepository from "./OrderRepositoryDatabase.ts";
+import type OrderRepository from "../../infra/repository/OrderRepository.ts";
 import type UseCase from "./UseCase.ts";
 
 export class ExecuteOrder implements UseCase {

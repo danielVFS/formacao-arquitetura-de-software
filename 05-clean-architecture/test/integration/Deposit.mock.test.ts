@@ -1,17 +1,17 @@
 import sinon from "sinon";
 import { afterEach, beforeEach, expect, test } from "vitest";
-import Account from "../../src/Account.ts";
-import type AccountRepository from "../../src/AccountRepository.ts";
-import { AccountRepositoryDatabase } from "../../src/AccountRepository.ts";
-import { PgPromiseAdapter } from "../../src/DatabaseConnection.ts";
-import { Deposit } from "../../src/Deposit.ts";
-import { GetAccount } from "../../src/GetAccount.ts";
-import { AxiosAdapter } from "../../src/HttpClient.ts";
+import { Deposit } from "../../src/application/usecase/Deposit.ts";
+import { GetAccount } from "../../src/application/usecase/GetAccount.ts";
+import { Signup } from "../../src/application/usecase/Signup.ts";
+import Account from "../../src/domain/Account.ts";
+import { PgPromiseAdapter } from "../../src/infra/database/DatabaseConnection.ts";
 import {
   PaymentGatewayFake,
   PaymentGatewayHttp,
-} from "../../src/PaymentGateway.ts";
-import { Signup } from "../../src/Signup.ts";
+} from "../../src/infra/gateway/PaymentGateway.ts";
+import { AxiosAdapter } from "../../src/infra/http/HttpClient.ts";
+import type AccountRepository from "../../src/infra/repository/AccountRepository.ts";
+import { AccountRepositoryDatabase } from "../../src/infra/repository/AccountRepository.ts";
 
 let databaseConnection: PgPromiseAdapter;
 let accountRepository: AccountRepository;
