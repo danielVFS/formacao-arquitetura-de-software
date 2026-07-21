@@ -21,50 +21,6 @@ beforeEach(async () => {
   accountRepository = new AccountRepositoryDatabase(databaseConnection);
 });
 
-test.skip("Deve fazer um depósito em uma conta spy", async () => {
-  const paymentGateway = new PaymentGatewayFake();
-  const signup = new Signup(accountRepository);
-  const getAccount = new GetAccount(accountRepository);
-  const deposit = new Deposit(accountRepository, paymentGateway);
-  const processTransactionSpy = sinon.spy(
-    PaymentGatewayHttp.prototype,
-    "processTransaction",
-  );
-  const inputSignup = {
-    name: "John Doe",
-    email: "john.doe@gmail.com",
-    document: "97456321558",
-    password: "asdQWE123",
-  };
-  const outputSignup = await signup.execute(inputSignup);
-  const inputDeposit = {
-    accountId: outputSignup.accountId,
-    assetId: "USD",
-    quantity: 100,
-    creditCardHolder: "JOHN DOE",
-    creditCardNumber: "4012001037141112",
-    creditCardExpDate: "05/2027",
-    creditCardCvv: "123",
-  };
-  await deposit.execute(inputDeposit);
-  const outputGetAccount = await getAccount.execute({
-    accountId: outputSignup.accountId,
-  });
-  expect(outputGetAccount.balances[0]?.assetId).toBe("USD");
-  expect(outputGetAccount.balances[0]?.quantity).toBe(100);
-  expect(processTransactionSpy.calledOnce).toBe(true);
-  expect(
-    processTransactionSpy.calledWith({
-      creditCardHolder: inputDeposit.creditCardHolder,
-      creditCardNumber: inputDeposit.creditCardNumber,
-      creditCardExpDate: inputDeposit.creditCardExpDate,
-      creditCardCvv: inputDeposit.creditCardCvv,
-      amount: inputDeposit.quantity,
-    }),
-  ).toBe(true);
-  processTransactionSpy.restore();
-});
-
 test("Deve fazer um depósito em uma conta mock", async () => {
   const httpClient = new AxiosAdapter();
   const paymentGateway = new PaymentGatewayHttp(httpClient);

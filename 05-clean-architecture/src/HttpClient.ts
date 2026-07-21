@@ -12,7 +12,28 @@ export class AxiosAdapter implements HttpClient {
   }
 
   async post(url: string, body: any, headers: any): Promise<any> {
-    const response = await axios.post(url, body, { headers });
+    const response = await axios({
+      url,
+      method: "POST",
+      data: body,
+      headers: headers,
+    });
     return response.data;
+  }
+}
+
+export class FetchAdapter implements HttpClient {
+  async get(url: string): Promise<any> {
+    const response = await fetch(url);
+    return response.json();
+  }
+
+  async post(url: string, body: any, headers: any): Promise<any> {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(body),
+    });
+    return response.json();
   }
 }
