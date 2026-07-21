@@ -10,7 +10,7 @@ export default class OrderController {
   ) {
     httpServer.route(
       "get",
-      "/orders/:orderId",
+      "/orders/:{orderId}",
       async (params: any, body: any) => {
         const orderId = params.orderId;
         const output = await this.getOrder.execute(orderId);

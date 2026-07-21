@@ -16,7 +16,7 @@ export default class AccountController {
 
     httpServer.route(
       "get",
-      "/accounts/:accountId",
+      "/accounts/:{accountId}",
       async (params: any, body: any) => {
         const accountId = params.accountId;
         const output = await this.getAccount.execute({ accountId });
